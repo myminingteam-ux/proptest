@@ -42,7 +42,7 @@ export function header(activePath='') {
   }).join('');
   return `<header class="site-header">
     <div class="wrap nav">
-      <a class="brand" href="/" aria-label="Your Funded Account home"><img src="/assets/yfa-logo.png" alt="Your Funded Account"></a>
+      <a class="brand" href="/" aria-label="Your Funded Account home"><span class="brand-logo" aria-hidden="true"></span></a>
       <nav class="desktop-nav" aria-label="Primary">${links}</nav>
       <div class="nav-actions"><a class="login" href="${externalFlows.signin}">Log in</a><a class="btn btn-primary" href="${externalFlows.signup}">Get started</a><button class="menu-toggle" aria-label="Open menu" aria-expanded="false">${icon('menu')}</button></div>
     </div>
@@ -53,7 +53,7 @@ export function header(activePath='') {
 export function footer() {
   return `<footer class="site-footer">
     <div class="wrap footer-main">
-      <div class="footer-brand"><img src="/assets/yfa-logo.png" alt="Your Funded Account"><p>Crypto-focused simulated trading evaluations with clear public rules.</p></div>
+      <div class="footer-brand"><span class="footer-logo" role="img" aria-label="Your Funded Account"></span><p>Crypto-focused simulated trading evaluations with clear public rules.</p></div>
       <div><strong>Programs</strong><a href="/one-step-challenge/">1-Step</a><a href="/two-step-challenge/">2-Step</a><a href="/instant-funding/">Instant Funding</a><a href="/pricing/">Pricing</a></div>
       <div><strong>Resources</strong><a href="/rules/">Rules</a><a href="/withdrawals/">Payouts</a><a href="/platform/">Platform</a><a href="/instruments/">Markets</a><a href="/faq/">FAQ</a></div>
       <div><strong>Company</strong><a href="/about/">About</a><a href="/contact/">Contact</a><a href="/terms-and-conditions/">Terms</a><a href="/privacy-policy/">Privacy</a><a href="/risk-disclosure/">Risk disclosure</a></div>
@@ -94,12 +94,12 @@ export function layout({ seo, path='/', body, schemas=[] }) {
   const schemaHtml = allSchemas.map(s=>`<script type="application/ld+json">${JSON.stringify(s)}</script>`).join('\n');
   return `<!doctype html><html lang="en"><head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="theme-color" content="#b8c6d3"><title>${escapeHtml(seo.title)}</title>
+    <meta name="theme-color" content="#05070a"><title>${escapeHtml(seo.title)}</title>
     <meta name="description" content="${escapeHtml(seo.description)}"><meta name="robots" content="${seo.robots}"><meta name="googlebot" content="${seo.robots}">
     <link rel="canonical" href="${seo.canonical}"><link rel="icon" href="/assets/yfa-mark.png">
     <meta property="og:type" content="website"><meta property="og:site_name" content="${escapeHtml(seo.siteName)}"><meta property="og:title" content="${escapeHtml(seo.title)}"><meta property="og:description" content="${escapeHtml(seo.description)}"><meta property="og:url" content="${seo.canonical}"><meta property="og:image" content="${seo.image}">
     <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(seo.title)}"><meta name="twitter:description" content="${escapeHtml(seo.description)}"><meta name="twitter:image" content="${seo.image}">
-    <link rel="stylesheet" href="/assets/styles.css"><link rel="stylesheet" href="/assets/premium.css?v=20260822-1">${schemaHtml}
+    <link rel="stylesheet" href="/assets/styles.css"><link rel="stylesheet" href="/assets/premium.css?v=20260822-black2">${schemaHtml}
   </head><body data-path="${path}">${header(path)}<main>${body}</main>${footer()}<script type="module" src="/assets/app.js"></script></body></html>`;
 }
 
