@@ -42,7 +42,7 @@ export function header(activePath='') {
   }).join('');
   return `<header class="site-header">
     <div class="wrap nav">
-      <a class="brand" href="/" aria-label="Your Funded Account home"><img src="/assets/yfa-logo-transparent.png" alt="Your Funded Account"></a>
+      <a class="brand" href="/" aria-label="Your Funded Account home"><img src="/assets/yfa-logo.png" alt="Your Funded Account"></a>
       <nav class="desktop-nav" aria-label="Primary">${links}</nav>
       <div class="nav-actions"><a class="login" href="${externalFlows.signin}">Log in</a><a class="btn btn-primary" href="${externalFlows.signup}">Get started</a><button class="menu-toggle" aria-label="Open menu" aria-expanded="false">${icon('menu')}</button></div>
     </div>
@@ -53,7 +53,7 @@ export function header(activePath='') {
 export function footer() {
   return `<footer class="site-footer">
     <div class="wrap footer-main">
-      <div class="footer-brand"><img src="/assets/yfa-logo-transparent.png" alt="Your Funded Account"><p>Crypto-focused simulated trading evaluations with clear public rules.</p></div>
+      <div class="footer-brand"><img src="/assets/yfa-logo.png" alt="Your Funded Account"><p>Crypto-focused simulated trading evaluations with clear public rules.</p></div>
       <div><strong>Programs</strong><a href="/one-step-challenge/">1-Step</a><a href="/two-step-challenge/">2-Step</a><a href="/instant-funding/">Instant Funding</a><a href="/pricing/">Pricing</a></div>
       <div><strong>Resources</strong><a href="/rules/">Rules</a><a href="/withdrawals/">Payouts</a><a href="/platform/">Platform</a><a href="/instruments/">Markets</a><a href="/faq/">FAQ</a></div>
       <div><strong>Company</strong><a href="/about/">About</a><a href="/contact/">Contact</a><a href="/terms-and-conditions/">Terms</a><a href="/privacy-policy/">Privacy</a><a href="/risk-disclosure/">Risk disclosure</a></div>
