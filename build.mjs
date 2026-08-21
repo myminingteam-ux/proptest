@@ -36,6 +36,7 @@ pages.forEach(writePage);
 fs.cpSync(path.join(root,'public'),dist,{recursive:true});
 fs.copyFileSync(path.join(root,'src/assets/styles.css'),path.join(dist,'assets/styles.css'));
 fs.copyFileSync(path.join(root,'src/assets/premium.css'),path.join(dist,'assets/premium.css'));
+fs.copyFileSync(path.join(root,'src/assets/chrome.css'),path.join(dist,'assets/chrome.css'));
 fs.copyFileSync(path.join(root,'src/assets/app.js'),path.join(dist,'assets/app.js'));
 
 const indexable=pages.filter(p=>!['/contact/','/404.html'].includes(p.path));
