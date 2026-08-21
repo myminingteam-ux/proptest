@@ -19,10 +19,8 @@ body{color-scheme:dark}
 .site-header{background:rgba(5,7,10,.94);border-bottom:1px solid #1c2632;box-shadow:0 10px 34px rgba(0,0,0,.34);backdrop-filter:blur(18px)}
 .nav{height:88px}
 .brand{display:flex;align-items:center;flex:0 0 178px;height:88px;overflow:visible}
-.brand img,.footer-brand img{display:none!important}
-.brand-logo,.footer-logo{display:block;background-image:url("/assets/yfa-logo-transparent.svg");background-repeat:no-repeat;background-size:contain;background-position:left center}
-.brand-logo{width:158px;height:79px}
-.footer-logo{width:202px;height:101px;margin-bottom:6px}
+.brand img{display:block!important;width:158px!important;height:auto!important;max-height:80px!important;object-fit:contain!important;object-position:left center!important;filter:none!important;opacity:1!important;mix-blend-mode:normal!important}
+.footer-brand img{display:block!important;width:202px!important;height:auto!important;max-height:104px!important;object-fit:contain!important;object-position:left center!important;filter:none!important;opacity:1!important;mix-blend-mode:normal!important;margin-bottom:6px}
 .desktop-nav{color:#aab7c7}.desktop-nav a{padding:34px 0 30px}.desktop-nav a:hover,.desktop-nav a.active{color:#fff;border-color:var(--blue)}
 .nav-actions{color:#d8e2ed}.login:hover{color:#68a2ff}
 .menu-toggle{background:#0e141c;border-color:#273342;color:#e8eef6}
@@ -50,8 +48,8 @@ body{color-scheme:dark}
 .not-found{background:#07090d}.not-found h1{color:#f1f5fa}
 @media screen and (max-width:980px){.mobile-nav{inset:88px 0 auto 0}.footer-main{grid-template-columns:1.4fr 1fr 1fr}}
 @media screen and (max-width:680px){
-  .nav{height:76px}.brand{height:76px;flex-basis:150px}.brand-logo{width:136px;height:68px}.mobile-nav{inset:76px 0 auto 0}
+  .nav{height:76px}.brand{height:76px;flex-basis:150px}.brand img{width:136px!important;max-height:68px!important}.mobile-nav{inset:76px 0 auto 0}
   .hero-home{background:linear-gradient(160deg,#06080c 0%,#0a1017 100%)}
   .hero-facts div:last-child{border-color:#222e3a}
-  .footer-logo{width:184px;height:92px}
+  .footer-brand img{width:184px!important;max-height:94px!important}
 }
