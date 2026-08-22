@@ -1,0 +1,39 @@
+/* GARY wide-desktop correction — use available horizontal space without stretching copy. */
+@media screen and (min-width:1280px){
+  :root{--desktop-max:1380px;--desktop-gutter:clamp(34px,3.2vw,64px)}
+  .wrap{width:min(var(--desktop-max),calc(100% - (var(--desktop-gutter)*2)))!important;max-width:none!important}
+  .narrow{width:min(940px,calc(100% - (var(--desktop-gutter)*2)))!important}
+
+  .nav{grid-template-columns:220px minmax(0,1fr) 205px!important;column-gap:34px!important}
+  .desktop-nav{gap:clamp(20px,1.7vw,30px)!important}
+
+  .hero-home-grid{grid-template-columns:minmax(500px,.84fr) minmax(620px,1.16fr)!important;gap:clamp(54px,5vw,92px)!important;min-height:620px!important;padding:72px 0 68px!important}
+  .hero-copy{max-width:620px!important}
+  .hero-copy h1{font-size:clamp(64px,4.8vw,78px)!important}
+  .market-stage{width:100%!important;max-width:none!important;justify-self:stretch!important;transform:none!important}
+  .hero-chart{width:100%!important}
+
+  .service-definition-grid{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important;gap:clamp(70px,7vw,118px)!important}
+  .section-heading.split{gap:72px!important}
+  .program-panel{grid-template-columns:.9fr 1.18fr .72fr!important}
+  .program-panel>*{padding:34px!important}
+  .product-grid{grid-template-columns:minmax(380px,.72fr) minmax(680px,1.28fr)!important;gap:clamp(60px,6vw,104px)!important}
+  .market-board{width:100%!important}
+  .conduct{padding:42px 48px!important}
+  .payout-band-grid{grid-template-columns:.72fr 1.28fr!important;gap:88px!important}
+  .trust-ledger>div{padding:28px 30px!important}
+
+  .page-hero-grid{grid-template-columns:minmax(0,1.05fr) minmax(300px,.55fr)!important;gap:80px!important}
+  .content .wrap{width:min(1280px,calc(100% - (var(--desktop-gutter)*2)))!important}
+
+  .footer-main{grid-template-columns:minmax(300px,360px) minmax(0,1fr)!important;gap:clamp(76px,7vw,130px)!important}
+  .footer-links{gap:clamp(42px,4vw,72px)!important}
+}
+
+@media screen and (min-width:1680px){
+  :root{--desktop-max:1480px}
+  .hero-home-grid{grid-template-columns:minmax(530px,.82fr) minmax(720px,1.18fr)!important;gap:96px!important}
+  .hero-copy{max-width:650px!important}
+  .market-stage{min-height:470px!important}
+  .hero-chart{min-height:350px!important}
+}
