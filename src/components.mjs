@@ -102,7 +102,7 @@ export function layout({ seo, path='/', body, schemas=[] }) {
     <link rel="canonical" href="${seo.canonical}"><link rel="icon" href="/assets/yfa-mark.png">
     <meta property="og:type" content="website"><meta property="og:site_name" content="${escapeHtml(seo.siteName)}"><meta property="og:title" content="${escapeHtml(seo.title)}"><meta property="og:description" content="${escapeHtml(seo.description)}"><meta property="og:url" content="${seo.canonical}"><meta property="og:image" content="${seo.image}">
     <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(seo.title)}"><meta name="twitter:description" content="${escapeHtml(seo.description)}"><meta name="twitter:image" content="${seo.image}">
-    <link rel="stylesheet" href="/assets/styles.css"><link rel="stylesheet" href="/assets/premium.css?v=20260822-black6"><link rel="stylesheet" href="/assets/chrome.css?v=20260822-3"><link rel="stylesheet" href="/assets/mobile-gary.css?v=20260822-1">${schemaHtml}
+    <link rel="stylesheet" href="/assets/styles.css"><link rel="stylesheet" href="/assets/premium.css?v=20260822-black6"><link rel="stylesheet" href="/assets/chrome.css?v=20260822-3"><link rel="stylesheet" href="/assets/mobile-gary.css?v=20260822-1"><link rel="stylesheet" href="/assets/responsive-scale.css?v=20260822-1">${schemaHtml}
   </head><body data-path="${path}">${header(path)}<main>${body}</main>${footer()}<script type="module" src="/assets/app.js"></script></body></html>`;
 }
 
