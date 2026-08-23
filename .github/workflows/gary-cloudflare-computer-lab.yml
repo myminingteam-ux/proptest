@@ -1,0 +1,50 @@
+name: GARY Cloudflare Computer LAB
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'gary-cloudflare-computer-lab/**'
+      - '.github/workflows/gary-cloudflare-computer-lab.yml'
+
+jobs:
+  local-worker-shell-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: gary-cloudflare-computer-lab
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Start Wrangler local runtime
+        run: |
+          nohup npm run dev -- --port 8787 > /tmp/gary-wrangler.log 2>&1 &
+          echo $! > /tmp/gary-wrangler.pid
+      - name: Wait for Worker
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8787/health >/tmp/gary-health.json; then
+              cat /tmp/gary-health.json
+              exit 0
+            fi
+            sleep 2
+          done
+          echo 'Worker did not become healthy'
+          cat /tmp/gary-wrangler.log || true
+          exit 1
+      - name: Run GARY LAB smoke gate
+        run: npm run lab:test:local
+      - name: Wrangler log on failure
+        if: failure()
+        run: cat /tmp/gary-wrangler.log || true
