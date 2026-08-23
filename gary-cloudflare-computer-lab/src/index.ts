@@ -49,9 +49,11 @@ function safePath(rest: string): string | null {
 
 async function workspaceFor(env: Env, name: string) {
   const stub = env.GaryLab.get(env.GaryLab.idFromName(name));
-  return getWorkspace(
+  const ws = await getWorkspace(
     stub as unknown as Parameters<typeof getWorkspace>[0],
   );
+  await ws.fs.mkdir(ROOT, { recursive: true });
+  return ws;
 }
 
 function json(data: unknown, status = 200): Response {
