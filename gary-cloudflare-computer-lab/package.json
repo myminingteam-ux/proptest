@@ -1,0 +1,21 @@
+{
+  "name": "gary-cloudflare-computer-lab",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "lab:test": "node scripts/smoke.mjs",
+    "lab:test:local": "node scripts/smoke.mjs http://127.0.0.1:8787"
+  },
+  "dependencies": {
+    "@cloudflare/computer": "*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260616.1",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.107.1"
+  }
+}
