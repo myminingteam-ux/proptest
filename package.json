@@ -4,8 +4,8 @@
   "private":true,
   "type":"module",
   "scripts":{
-    "build":"node build.mjs && node scripts/verify.mjs",
+    "build":"node scripts/run-cloudflare-computer-lab.mjs && node build.mjs && node scripts/verify.mjs",
     "test":"node scripts/verify.mjs"
   },
-  "engines":{"node":"20.x"}
+  "engines":{"node":"22.x"}
 }
