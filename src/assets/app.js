@@ -1,7 +1,7 @@
 const menuToggle=document.querySelector('.menu-toggle');
 const mobileNav=document.querySelector('.mobile-nav');
 if(menuToggle&&mobileNav){menuToggle.addEventListener('click',()=>{const open=mobileNav.classList.toggle('open');menuToggle.setAttribute('aria-expanded',String(open));document.body.classList.toggle('menu-open',open)});mobileNav.addEventListener('click',e=>{if(e.target.closest('a')){mobileNav.classList.remove('open');menuToggle.setAttribute('aria-expanded','false');document.body.classList.remove('menu-open')}})}
-document.querySelectorAll('[data-faq]').forEach(group=>group.querySelectorAll('article>button').forEach(btn=>btn.addEventListener('click',()=>{const item=btn.closest('article');const open=item.classList.toggle('open');btn.setAttribute('aria-expanded',String(open))})));
+document.querySelectorAll('[data-faq]').forEach(group=>group.querySelectorAll('article>button').forEach(btn=>{const mark=btn.querySelector('span:last-child');if(mark){mark.classList.add('faq-toggle-mark');mark.innerHTML='<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg>'}btn.addEventListener('click',()=>{const item=btn.closest('article');const open=item.classList.toggle('open');btn.setAttribute('aria-expanded',String(open));if(mark)mark.style.transform=open?'rotate(180deg)':'rotate(0deg)'})}));
 const config=document.querySelector('[data-config]');
 if(config){
   const data={
