@@ -108,7 +108,13 @@ try {
   }
   console.log("PASS  shell sees persisted file after restart");
 
-  console.log("=== GARY Cloudflare Computer LAB PASS: 17 smoke + 2 restart checks ===\n");
+  const gitAfterRestart = await exec("gary-git-test", "git log -1 --oneline");
+  if (!String(gitAfterRestart.stdout || "").includes("lab commit")) {
+    throw new Error(`git repository restart persistence mismatch: ${JSON.stringify(gitAfterRestart)}`);
+  }
+  console.log("PASS  Git repository survives Wrangler restart");
+
+  console.log("=== GARY Cloudflare Computer LAB PASS: 22 smoke + 3 restart checks = 25/25 ===\n");
 } finally {
   await stopWrangler(runtime.child);
 }
