@@ -11,7 +11,8 @@
     "lab:test:local": "node scripts/smoke.mjs http://127.0.0.1:8787"
   },
   "dependencies": {
-    "@cloudflare/computer": "*"
+    "@cloudflare/computer": "*",
+    "@platformatic/vfs": "^0.4.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260820.1",
