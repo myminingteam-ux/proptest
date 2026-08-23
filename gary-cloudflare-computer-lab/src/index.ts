@@ -6,6 +6,7 @@ import {
   withWorkspace,
 } from "@cloudflare/computer";
 import { WorkerShellBackend } from "@cloudflare/computer/backends/worker-shell";
+import { createGitClient } from "@cloudflare/computer/git";
 import jq from "@cloudflare/computer/shell/jq";
 
 export { WorkspaceServiceProxy };
@@ -20,6 +21,7 @@ export class GaryLab extends withWorkspace(
 
     return {
       storage: ctx.storage as unknown as DurableObjectStorageLike,
+      git: createGitClient(),
       backends: [
         new WorkerShellBackend({
           loader: env.LOADER,
