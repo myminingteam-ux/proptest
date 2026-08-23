@@ -2,6 +2,7 @@ const base = (process.argv[2] || process.env.GARY_LAB_URL || "http://127.0.0.1:8
 
 const A = "gary-test-a";
 const B = "gary-test-b";
+const G = "gary-git-test";
 const markerA = `GARY-A-${Date.now()}`;
 const markerB = `GARY-B-${Date.now()}`;
 let passed = 0;
@@ -94,6 +95,33 @@ async function main() {
   if (mutated) mutated.text === `${markerA}\nvia-shell`
     ? ok("shell ↔ filesystem coherence")
     : bad("shell ↔ filesystem coherence", mutated.text);
+
+  const gitRun = await expectStatus("git workflow exec", `/lab/${G}/exec`, 200, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      cwd: "/workspace",
+      command: "git init . && git config user.name 'GARY LAB' && git config user.email 'gary-lab@example.invalid' && printf 'git-lab\\n' > git-test.txt && git add git-test.txt && git commit -m 'lab commit' && git status --porcelain && git log -1 --oneline",
+    }),
+  });
+  if (gitRun) {
+    try {
+      const body = JSON.parse(gitRun.text);
+      Number(body.exitCode) === 0
+        ? ok("git init/add/commit/log")
+        : bad("git init/add/commit/log", gitRun.text);
+      String(body.stdout || "").includes("lab commit")
+        ? ok("git log contains commit")
+        : bad("git log contains commit", gitRun.text);
+    } catch {
+      bad("git init/add/commit/log", "invalid JSON");
+    }
+  }
+
+  const gitFile = await expectStatus("git file via filesystem", `/lab/${G}/file/workspace/git-test.txt`, 200);
+  if (gitFile) gitFile.text === "git-lab\n"
+    ? ok("git working tree shares Workspace.fs")
+    : bad("git working tree shares Workspace.fs", gitFile.text);
 
   console.log(`\nResult: ${passed} passed, ${failed} failed`);
   if (failed > 0) process.exitCode = 1;
