@@ -14,7 +14,7 @@
     "@cloudflare/computer": "*"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260616.1",
+    "@cloudflare/workers-types": "^5.20260820.1",
     "typescript": "^6.0.3",
     "wrangler": "^4.107.1"
   }
