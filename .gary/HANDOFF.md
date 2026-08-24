@@ -14,7 +14,7 @@
 ## Decisions
 
 - Persisted state is authoritative across ChatGPT and Codex surfaces.
-- `myminingteam-ux/proptest//gary-control-plane` is the canonical location until a dedicated repository becomes available.
+- `myminingteam-ux/proptest/gary-control-plane` is the canonical location until a dedicated repository becomes available.
 
 ## Rejected or not promoted
 
