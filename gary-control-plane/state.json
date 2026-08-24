@@ -1,7 +1,7 @@
 {
   "schema": "gary.continuity-state.v1",
-  "control_plane_revision": 1,
-  "updated_at": "2026-08-24T15:27:24+02:00",
+  "control_plane_revision": 2,
+  "updated_at": "2026-08-24T15:47:41+02:00",
   "canonical_uri": "https://github.com/myminingteam-ux/proptest/tree/main/gary-control-plane",
   "stable": {
     "gary_version": "2.6.5",
@@ -13,15 +13,17 @@
   "lab": [
     {
       "id": "cloudflare-computer-workflow",
-      "status": "inactive",
-      "evidence": "proptest@916bd19ac2b9c8054dfae556cdfb8a3b795a552c"
+      "status": "blocked",
+      "evidence": "gary-control-plane/evidence/CLOUDFLARE-COMPUTER-LAB-2026-08-24.md",
+      "blocker": "Cloudflare Dynamic Workers plan entitlement (API error 10195)",
+      "stable_changed": false
     }
   ],
   "projects": {
     "yourfundedaccount": {
       "repository": "myminingteam-ux/proptest",
       "project_revision": 1,
-      "required_control_plane_revision": 1
+      "required_control_plane_revision": 2
     }
   }
 }

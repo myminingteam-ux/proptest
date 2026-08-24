@@ -1,7 +1,7 @@
 # GARY canonical state
 
-- Control-plane revision: `1`
-- Updated: `2026-08-24T15:27:24+02:00`
+- Control-plane revision: `2`
+- Updated: `2026-08-24T15:47:41+02:00`
 - Canonical location: `myminingteam-ux/proptest/gary-control-plane`
 - Machine-readable companion: `state.json`
 
@@ -21,8 +21,9 @@
 
 ## LAB
 
-- No active LAB payload is evidenced in the 2026-08-24 continuity conversation.
-- A temporary Cloudflare Computer LAB workflow was removed from the `proptest` main branch in commit `916bd19ac2b9c8054dfae556cdfb8a3b795a552c`; its result is not promoted.
+- Cloudflare Computer LAB `GARY-CLOUDFLARE-COMPUTER-LAB-001` is `BLOCKED`. The payload was recovered from branch commit `f315c6e1a258d61b5996e6722477f076649f1b6e`, validated, and submitted to both a temporary and the authenticated Cloudflare account. Cloudflare rejected activation with API error `10195` because Dynamic Workers require a paid plan.
+- No remote endpoint or runtime logs were created, and the remote smoke gate remains unverified. Evidence: `evidence/CLOUDFLARE-COMPUTER-LAB-2026-08-24.md`.
+- GARY STABLE is unchanged; nothing is promoted.
 
 ## ARCHIVED-REJECTED
 

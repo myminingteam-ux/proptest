@@ -2,8 +2,8 @@
 
 - Repository: `myminingteam-ux/proptest`
 - Project revision: `1`
-- Required control-plane revision: `1`
-- Updated: `2026-08-24T15:27:24+02:00`
+- Required control-plane revision: `2`
+- Updated: `2026-08-24T15:47:41+02:00`
 - Control plane: `../gary-control-plane/` or `https://github.com/myminingteam-ux/proptest/tree/main/gary-control-plane`
 - Source commit inspected: `916bd19ac2b9c8054dfae556cdfb8a3b795a552c`
 
@@ -26,3 +26,4 @@ The site is a coded, static/server-rendered YourFundedAccount production candida
 
 - No public deployment or domain cutover is authorized by this state file.
 - Do not promote temporary LAB work into the production path without explicit evidence and decision entries.
+- Cloudflare Computer LAB remains blocked by Dynamic Workers plan entitlement; it is not part of this production candidate.

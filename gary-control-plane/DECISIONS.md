@@ -1,7 +1,7 @@
 # GARY decisions
 
-Control-plane revision: `1`  
-Updated: `2026-08-24T15:27:24+02:00`
+Control-plane revision: `2`
+Updated: `2026-08-24T15:47:41+02:00`
 
 ## D-001 — Persisted continuity is authoritative
 
@@ -32,3 +32,9 @@ Updated: `2026-08-24T15:27:24+02:00`
 - Status: locked
 - Date: 2026-08-24
 - Decision: STABLE is GARY v2.6.5 + ER1.1 + ER1.2. NEXT and LAB remain non-canonical. Only explicit, evidence-backed promotion may change STABLE.
+
+## D-006 — Cloudflare Computer remote trial remains LAB/BLOCKED
+
+- Status: blocked
+- Date: 2026-08-24
+- Decision: Do not promote or describe the Cloudflare Computer trial as remotely validated. Cloudflare rejected activation with API error `10195` because the account lacks the paid Dynamic Workers entitlement. Resume only after entitlement preflight; require activation, endpoint, authenticated smoke, and runtime logs before PASS.
