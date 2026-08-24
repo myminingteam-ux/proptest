@@ -1,7 +1,7 @@
 # GARY project index
 
-Control-plane revision: `2`
-Updated: `2026-08-24T15:47:41+02:00`
+Control-plane revision: `3`
+Updated: `2026-08-24T16:39:41+02:00`
 
 | Project | Repository | Project revision | State | Local continuity files |
 |---|---|---:|---|---|

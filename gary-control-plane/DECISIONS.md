@@ -1,11 +1,11 @@
 # GARY decisions
 
-Control-plane revision: `2`
-Updated: `2026-08-24T15:47:41+02:00`
+Control-plane revision: `3`
+Updated: `2026-08-24T16:39:41+02:00`
 
 ## D-001 — Persisted continuity is authoritative
 
-- Status: accepted
+- Status: superseded by D-007
 - Date: 2026-08-24
 - Decision: Chat history and memory are convenience layers. The checked-in control plane is the durable authority for global GARY state, decisions, benchmark evidence, and project pointers.
 
@@ -29,7 +29,7 @@ Updated: `2026-08-24T15:47:41+02:00`
 
 ## D-005 — Promotion boundary
 
-- Status: locked
+- Status: superseded by D-008
 - Date: 2026-08-24
 - Decision: STABLE is GARY v2.6.5 + ER1.1 + ER1.2. NEXT and LAB remain non-canonical. Only explicit, evidence-backed promotion may change STABLE.
 
@@ -38,3 +38,15 @@ Updated: `2026-08-24T15:47:41+02:00`
 - Status: blocked
 - Date: 2026-08-24
 - Decision: Do not promote or describe the Cloudflare Computer trial as remotely validated. Cloudflare rejected activation with API error `10195` because the account lacks the paid Dynamic Workers entitlement. Resume only after entitlement preflight; require activation, endpoint, authenticated smoke, and runtime logs before PASS.
+
+## D-007 — Pointer and ledger are authoritative
+
+- Status: accepted
+- Date: 2026-08-24
+- Decision: `C:\Users\codex\.gary\CURRENT.json` is the sole boot authority and `C:\Users\codex\.gary\state\gary.sqlite3` is the hash-chained evolution authority. This repository control plane is a verified projection and must fail closed on drift.
+
+## D-008 — Promote GARY v2.7.1 coherence repair
+
+- Status: accepted
+- Date: 2026-08-24
+- Decision: Promote GARY v2.7.1 State Coherence & Complexity Repair with no behavioral authority expansion. Keep MEM5.x proposal-only, SCD/DVR shadow, SEF1/SRG1 LAB, and Alpha9 excluded. Direct rollback is v2.7.0 SHA-256 `22d2b907bbd3dec29beb55163b4e5a00a56a001cf3b2b76db32f410e9c249e63`.

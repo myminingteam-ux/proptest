@@ -1,16 +1,36 @@
 {
-  "schema": "gary.continuity-state.v1",
-  "control_plane_revision": 2,
-  "updated_at": "2026-08-24T15:47:41+02:00",
+  "schema": "gary.continuity-state.v2",
+  "control_plane_revision": 3,
+  "updated_at": "2026-08-24T16:39:41+02:00",
   "canonical_uri": "https://github.com/myminingteam-ux/proptest/tree/main/gary-control-plane",
+  "authority": {
+    "role": "verified projection",
+    "projection_is_authority": false,
+    "boot_pointer": "C:\\Users\\codex\\.gary\\CURRENT.json",
+    "evolution_ledger": "C:\\Users\\codex\\.gary\\state\\gary.sqlite3",
+    "evolution_state_hash": "f760d1d8217e3aa1415d81be8a4fd7fea1c9a4d6ae7bcd3748a72113c816c36c",
+    "evolution_event_count": 19
+  },
   "stable": {
-    "gary_version": "2.6.5",
-    "extensions": ["ER1.1", "ER1.2"],
-    "promotion": "A004",
-    "archive_sha256": "b354c6c5ab8a0e693b3fb746936e9d85fec80112ef61fabd4384e77275503424"
+    "gary_version": "2.7.1",
+    "title": "State Coherence & Complexity Repair",
+    "promotion": "STATE-COHERENCE-COMPLEXITY-REPAIR",
+    "archive_sha256": "30a80daafc37be6fea6a10ccc3dbb0387daa4ade2c14290d60fcc3e501d88587",
+    "evidence_archive_sha256": "93428259177cfaf1be12496c2ba04df478d19850d48ca44d6524c41df3bd026a",
+    "lab_archive_sha256": "1beb0ba7b5de3699d366a6c6d08dc10d2f046b6a0ca03084dd315de8f3f419b9",
+    "persistence_gate": "PASS",
+    "specialists": 14,
+    "skills": 41,
+    "rollback": {"gary_version": "2.7.0", "archive_sha256": "22d2b907bbd3dec29beb55163b4e5a00a56a001cf3b2b76db32f410e9c249e63"}
   },
   "next": [],
   "lab": [
+    {
+      "id": "srg1-specialist-routing-gate",
+      "status": "inconclusive",
+      "result": "R2B quality 66 vs 66; no improvement; unpromoted",
+      "stable_changed": false
+    },
     {
       "id": "cloudflare-computer-workflow",
       "status": "blocked",
@@ -23,7 +43,7 @@
     "yourfundedaccount": {
       "repository": "myminingteam-ux/proptest",
       "project_revision": 1,
-      "required_control_plane_revision": 2
+      "required_control_plane_revision": 3
     }
   }
 }

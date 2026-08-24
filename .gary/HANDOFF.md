@@ -1,9 +1,9 @@
 # YourFundedAccount handoff
 
-- Handoff revision: `2`
+- Handoff revision: `3`
 - Project revision: `1`
-- GARY control-plane revision: `2`
-- Updated: `2026-08-24T15:47:41+02:00`
+- GARY control-plane revision: `3`
+- Updated: `2026-08-24T16:39:41+02:00`
 - Surface: Codex Desktop
 
 ## Changed
@@ -11,11 +11,11 @@
 - Installed the minimal GARY continuity control plane and project-local continuity gate.
 - Recorded the supported YFA project status, blockers, QA evidence, and LAB boundary.
 - Recorded the Cloudflare Computer remote trial as LAB/BLOCKED with direct deployment evidence and a regression rule.
+- Reconciled the shared projection to GARY v2.7.1 and bound it to the pointer/ledger state hash; project deployment authority is unchanged.
 
 ## Decisions
 
-- Persisted state is authoritative across ChatGPT and Codex surfaces.
-- `myminingteam-ux/proptest/gary-control-plane` is the canonical location until a dedicated repository becomes available.
+- The GARY pointer and evolution ledger are authoritative across ChatGPT and Codex surfaces; repository state is a verified projection.
 
 ## Rejected or not promoted
 
