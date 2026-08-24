@@ -25,7 +25,7 @@ Updated: `2026-08-24T15:27:24+02:00`
 
 - Status: accepted with migration option
 - Date: 2026-08-24
-- Decision: Until a dedicated repository can be created, `myminingteam-ux/proptest//gary-control-plane` is the canonical control-plane location. A future move changes the canonical URI and revision; it does not fork the state.
+- Decision: Until a dedicated repository can be created, `myminingteam-ux/proptest/gary-control-plane` is the canonical control-plane location. A future move changes the canonical URI and revision; it does not fork the state.
 
 ## D-005 — Promotion boundary
 
