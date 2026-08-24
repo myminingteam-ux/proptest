@@ -1,0 +1,27 @@
+{
+  "schema": "gary.continuity-state.v1",
+  "control_plane_revision": 1,
+  "updated_at": "2026-08-24T15:27:24+02:00",
+  "canonical_uri": "https://github.com/myminingteam-ux/proptest/tree/main/gary-control-plane",
+  "stable": {
+    "gary_version": "2.6.5",
+    "extensions": ["ER1.1", "ER1.2"],
+    "promotion": "A004",
+    "archive_sha256": "b354c6c5ab8a0e693b3fb746936e9d85fec80112ef61fabd4384e77275503424"
+  },
+  "next": [],
+  "lab": [
+    {
+      "id": "cloudflare-computer-workflow",
+      "status": "inactive",
+      "evidence": "proptest@916bd19ac2b9c8054dfae556cdfb8a3b795a552c"
+    }
+  ],
+  "projects": {
+    "yourfundedaccount": {
+      "repository": "myminingteam-ux/proptest",
+      "project_revision": 1,
+      "required_control_plane_revision": 1
+    }
+  }
+}
