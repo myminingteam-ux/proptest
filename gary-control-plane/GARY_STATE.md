@@ -2,7 +2,7 @@
 
 - Control-plane revision: `1`
 - Updated: `2026-08-24T15:27:24+02:00`
-- Canonical location: `myminingteam-ux/proptest//gary-control-plane`
+- Canonical location: `myminingteam-ux/proptest/gary-control-plane`
 - Machine-readable companion: `state.json`
 
 ## STABLE
