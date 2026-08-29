@@ -1,0 +1,141 @@
+name: Build exact recovered reFresh Android shell
+on:
+  push:
+    branches:
+      - tmp/refresh-flex3-shell-build-20260829
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Create recovered native shell only
+        shell: bash
+        run: |
+          set -euxo pipefail
+          ROOT=/tmp/refresh-exact-shell
+          mkdir -p "$ROOT/app/src/main/java/com/tropic/refreshkiosk" "$ROOT/app/src/main/assets" "$ROOT/app/src/main/res/values"
+          cat > "$ROOT/settings.gradle" <<'EOF'
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories { google(); mavenCentral() }
+          }
+          rootProject.name = 'RefreshKiosk'
+          include ':app'
+          EOF
+          cat > "$ROOT/build.gradle" <<'EOF'
+          plugins { id 'com.android.application' version '8.7.3' apply false }
+          EOF
+          cat > "$ROOT/app/build.gradle" <<'EOF'
+          plugins { id 'com.android.application' }
+          android {
+            namespace 'com.tropic.refreshkiosk'
+            compileSdk 35
+            defaultConfig {
+              applicationId 'com.tropic.refreshkiosk'
+              minSdk 29
+              targetSdk 35
+              versionCode 1
+              versionName '1.0'
+            }
+          }
+          EOF
+          cat > "$ROOT/app/src/main/AndroidManifest.xml" <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <application android:theme="@style/AppTheme" android:label="reFresh Demo" android:allowBackup="false" android:supportsRtl="true">
+              <activity android:name=".MainActivity" android:screenOrientation="portrait" android:exported="true">
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN" />
+                  <category android:name="android.intent.category.LAUNCHER" />
+                </intent-filter>
+              </activity>
+            </application>
+          </manifest>
+          EOF
+          cat > "$ROOT/app/src/main/res/values/styles.xml" <<'EOF'
+          <resources>
+            <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+              <item name="android:fontFamily">sans</item>
+              <item name="android:windowActionModeOverlay">true</item>
+              <item name="android:colorAccent">#65B32E</item>
+              <item name="android:windowLightStatusBar">false</item>
+              <item name="android:navigationBarColor">#000000</item>
+              <item name="android:windowNoTitle">true</item>
+            </style>
+          </resources>
+          EOF
+          cat > "$ROOT/app/src/main/java/com/tropic/refreshkiosk/MainActivity.java" <<'EOF'
+          package com.tropic.refreshkiosk;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.view.View;
+          import android.view.WindowManager;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+
+          public class MainActivity extends Activity {
+              private WebView webView;
+
+              @Override protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                  webView = new WebView(this);
+                  setContentView(webView);
+                  WebSettings s = webView.getSettings();
+                  s.setJavaScriptEnabled(true);
+                  s.setDomStorageEnabled(true);
+                  s.setAllowFileAccess(true);
+                  s.setAllowContentAccess(true);
+                  s.setAllowFileAccessFromFileURLs(true);
+                  s.setAllowUniversalAccessFromFileURLs(true);
+                  webView.setWebViewClient(new WebViewClient());
+                  webView.setWebChromeClient(new WebChromeClient());
+                  webView.loadUrl("file:///android_asset/index.html");
+                  applyImmersive();
+              }
+
+              private void applyImmersive() {
+                  getWindow().getDecorView().setSystemUiVisibility(
+                      View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+                      View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                      View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                      View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                      View.SYSTEM_UI_FLAG_FULLSCREEN |
+                      View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                  );
+              }
+
+              @Override public void onWindowFocusChanged(boolean hasFocus) {
+                  super.onWindowFocusChanged(hasFocus);
+                  if (hasFocus) applyImmersive();
+              }
+
+              @Override public void onBackPressed() {
+                  if (webView != null) webView.evaluateJavascript("window.dispatchEvent(new Event('refresh-back'))", null);
+              }
+          }
+          EOF
+          printf '%s\n' '<!doctype html><html><body>placeholder</body></html>' > "$ROOT/app/src/main/assets/index.html"
+      - name: Build exact shell APK
+        working-directory: /tmp/refresh-exact-shell
+        run: gradle --no-daemon :app:assembleDebug
+      - name: Stage exact shell
+        run: cp /tmp/refresh-exact-shell/app/build/outputs/apk/debug/app-debug.apk refresh-flex3-exact-shell-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: refresh-flex3-exact-shell-debug
+          path: refresh-flex3-exact-shell-debug.apk
+          if-no-files-found: error
