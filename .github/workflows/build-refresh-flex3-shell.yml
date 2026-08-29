@@ -1,0 +1,135 @@
+name: Build disposable reFresh Android shell
+on:
+  push:
+    branches:
+      - tmp/refresh-flex3-shell-build-20260829
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Create generic Android shell
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p /tmp/refresh-shell/app/src/main/java/com/tropic/refreshkiosk
+          mkdir -p /tmp/refresh-shell/app/src/main/assets
+          mkdir -p /tmp/refresh-shell/app/src/main/res/values
+          cat > /tmp/refresh-shell/settings.gradle <<'EOF'
+          pluginManagement {
+            repositories { google(); mavenCentral(); gradlePluginPortal() }
+          }
+          dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories { google(); mavenCentral() }
+          }
+          rootProject.name = 'RefreshKiosk'
+          include ':app'
+          EOF
+          cat > /tmp/refresh-shell/build.gradle <<'EOF'
+          plugins {
+            id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+          cat > /tmp/refresh-shell/app/build.gradle <<'EOF'
+          plugins { id 'com.android.application' }
+          android {
+            namespace 'com.tropic.refreshkiosk'
+            compileSdk 35
+            defaultConfig {
+              applicationId 'com.tropic.refreshkiosk'
+              minSdk 29
+              targetSdk 35
+              versionCode 1
+              versionName '1.0'
+            }
+          }
+          EOF
+          cat > /tmp/refresh-shell/app/src/main/AndroidManifest.xml <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.INTERNET"/>
+            <application android:theme="@style/AppTheme" android:label="reFresh">
+              <activity android:name=".MainActivity" android:screenOrientation="portrait" android:exported="true">
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN"/>
+                  <category android:name="android.intent.category.LAUNCHER"/>
+                </intent-filter>
+              </activity>
+            </application>
+          </manifest>
+          EOF
+          cat > /tmp/refresh-shell/app/src/main/res/values/styles.xml <<'EOF'
+          <resources>
+            <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+              <item name="android:fontFamily">sans</item>
+              <item name="android:windowFullscreen">true</item>
+              <item name="android:colorAccent">#000000</item>
+              <item name="android:navigationBarColor">#000000</item>
+              <item name="android:statusBarColor">#000000</item>
+            </style>
+          </resources>
+          EOF
+          cat > /tmp/refresh-shell/app/src/main/java/com/tropic/refreshkiosk/MainActivity.java <<'EOF'
+          package com.tropic.refreshkiosk;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.view.View;
+          import android.view.WindowManager;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+
+          public class MainActivity extends Activity {
+            private WebView webView;
+            @Override public void onCreate(Bundle state) {
+              super.onCreate(state);
+              getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+              enterKiosk();
+              webView = new WebView(this);
+              WebSettings s = webView.getSettings();
+              s.setJavaScriptEnabled(true);
+              s.setDomStorageEnabled(true);
+              s.setAllowFileAccess(true);
+              s.setAllowContentAccess(true);
+              s.setMediaPlaybackRequiresUserGesture(false);
+              webView.setWebViewClient(new WebViewClient());
+              setContentView(webView);
+              webView.loadUrl("file:///android_asset/index.html");
+            }
+            private void enterKiosk() {
+              getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
+                View.SYSTEM_UI_FLAG_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            }
+            @Override public void onWindowFocusChanged(boolean focus) {
+              super.onWindowFocusChanged(focus);
+              if (focus) enterKiosk();
+            }
+            @Override public void onBackPressed() { }
+          }
+          EOF
+          printf '%s\n' '<!doctype html><html><body>reFresh shell</body></html>' > /tmp/refresh-shell/app/src/main/assets/index.html
+      - name: Build shell APK
+        working-directory: /tmp/refresh-shell
+        run: gradle --no-daemon :app:assembleDebug
+      - name: Stage artifact
+        run: cp /tmp/refresh-shell/app/build/outputs/apk/debug/app-debug.apk refresh-flex3-shell-debug.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: refresh-flex3-shell-debug
+          path: refresh-flex3-shell-debug.apk
+          if-no-files-found: error
