@@ -85,6 +85,16 @@ jobs:
           )
           utils_path.write_text(utils, encoding="utf-8", newline="\n")
 
+          ui_path = Path("src/mod/src/UI.cpp")
+          ui = ui_path.read_text(encoding="utf-8")
+          ui = replace_once(
+              ui,
+              "ImGuiChildFlags_Border",
+              "ImGuiChildFlags_Borders",
+              "SDK 4.1.0 ImGui child-border rename",
+          )
+          ui_path.write_text(ui, encoding="utf-8", newline="\n")
+
           if os.environ["BUILD_VARIANT"] == "load-hook-disabled":
               cpp_path = Path("src/mod/src/Croupier.cpp")
               cpp = cpp_path.read_text(encoding="utf-8")
