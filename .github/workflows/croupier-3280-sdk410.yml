@@ -35,9 +35,10 @@ jobs:
           $path = 'src/mod/CMakeLists.txt'
           $text = Get-Content $path -Raw
           $text = $text.Replace('set(ZHMMODSDK_VER "v4.0.0-rc.2")', 'set(ZHMMODSDK_VER "v4.1.0")')
-          $text = $text.Replace('target_compile_options(Croupier PRIVATE -utf-8)', "target_compile_options(Croupier PRIVATE -utf-8)`ntarget_compile_definitions(Croupier PRIVATE NOMINMAX)")
+          $text = $text.Replace('target_compile_options(Croupier PRIVATE -utf-8)', "target_compile_options(Croupier PRIVATE -utf-8)`ntarget_compile_definitions(Croupier PRIVATE NOMINMAX)`ntarget_include_directories(Croupier PRIVATE \"$ENV{VCPKG_PREFIX}/include\")")
           if ($text -notmatch 'ZHMMODSDK_VER "v4.1.0"') { throw 'SDK version patch failed' }
           if ($text -notmatch 'NOMINMAX') { throw 'NOMINMAX patch failed' }
+          if ($text -notmatch 'VCPKG_PREFIX') { throw 'vcpkg include patch failed' }
           Set-Content $path $text -Encoding UTF8
 
       - name: Apply friend loading-hook workaround consistently
@@ -120,11 +121,8 @@ jobs:
       - name: Build HITMAN mod against ZHMModSDK v4.1.0
         shell: pwsh
         run: |
-          $implotInclude = Join-Path $env:VCPKG_PREFIX 'include'
-          $implotRelease = Join-Path $env:VCPKG_PREFIX 'lib/implot.lib'
-          $implotDebug = Join-Path $env:VCPKG_PREFIX 'debug/lib/implot.lib'
           Push-Location src/mod
-          cmake --preset x64-Release -DCMAKE_PREFIX_PATH="$env:VCPKG_PREFIX" -DIMPLOT_INCLUDE_DIR="$implotInclude" -DIMPLOT_LIBRARY="$implotRelease" -DIMPLOT_DEBUG_LIBRARY="$implotDebug"
+          cmake --preset x64-Release
           if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed' }
           cmake --build _build/x64-Release --config RelWithDebInfo --parallel
           if ($LASTEXITCODE -ne 0) { throw 'Croupier native build failed' }
