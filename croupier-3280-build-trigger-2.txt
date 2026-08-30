@@ -1,0 +1,1 @@
+Trigger rebuild after wiring ZHMModSDK v4.1.0 ImPlot dependency and NOMINMAX.
