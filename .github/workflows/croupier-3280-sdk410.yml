@@ -169,6 +169,8 @@ jobs:
           $modDir = Join-Path $release 'Mod - Install to Game'
           New-Item -ItemType Directory -Force $appDir,$modDir | Out-Null
           Copy-Item 'built-app/*' $appDir -Recurse -Force
+          Copy-Item 'src/config' $appDir -Recurse -Force
+          Copy-Item 'src/rulesets' $appDir -Recurse -Force
           Copy-Item 'built-mod/Croupier.dll' $modDir -Force
           Copy-Item 'COMPATIBILITY-SOURCE-DIFF.patch' $release -Force
 
@@ -225,3 +227,4 @@ jobs:
           path: Croupier-3.280-SDK4.1.0-${{ matrix.variant }}.zip
           if-no-files-found: error
           retention-days: 7
+
