@@ -30,7 +30,6 @@ jobs:
           $hash = (Get-FileHash official.zip -Algorithm SHA256).Hash.ToLower()
           if ($hash -ne 'bf0771a6416fc18833b311a8039a7ddc1608102ffdd9e021a355f8e46671bd29') { throw "Official ZIP hash mismatch: $hash" }
           Expand-Archive official.zip -DestinationPath official
-          Get-ChildItem official -Force
 
       - name: Build desktop app from exact source
         shell: pwsh
@@ -59,18 +58,12 @@ jobs:
       - name: Assemble ready-to-use package
         shell: pwsh
         run: |
-          if (Test-Path 'official/App - Install Anywhere') {
-            Copy-Item 'official/*' release -Recurse -Force
-          } else {
-            $base = Get-ChildItem official -Directory | Select-Object -First 1
-            if ($base -and (Test-Path (Join-Path $base.FullName 'App - Install Anywhere'))) {
-              Copy-Item (Join-Path $base.FullName '*') release -Recurse -Force
-            } else {
-              throw 'Could not locate official release package structure'
-            }
-          }
-          Copy-Item 'built-app/*' 'release/App - Install Anywhere/' -Recurse -Force
-          Copy-Item 'built-mod/Croupier.dll' 'release/Mod - Install to Game/Croupier.dll' -Force
+          New-Item -ItemType Directory -Force release | Out-Null
+          Copy-Item -Path 'official/App - Install Anywhere' -Destination release -Recurse -Force
+          Copy-Item -Path 'official/Mod - Install to Game' -Destination release -Recurse -Force
+          Copy-Item -Path 'official/README.txt' -Destination 'release/README.txt' -Force
+          Copy-Item -Path 'built-app/*' -Destination 'release/App - Install Anywhere/' -Recurse -Force
+          Copy-Item -Path 'built-mod/Croupier.dll' -Destination 'release/Mod - Install to Game/Croupier.dll' -Force
           @'
           CROUPIER EXACT REBUILD
 
@@ -83,8 +76,10 @@ jobs:
           Mod:
           Copy Croupier.dll from "Mod - Install to Game" into HITMAN3\Retail\mods\.
 
-          The application and mod in this package were rebuilt on Windows from the exact source commit above.
-          '@ | Set-Content -Path release/'START HERE.txt' -Encoding UTF8
+          The Croupier.exe and Croupier.dll in this package were rebuilt on Windows from the exact source commit above.
+          '@ | Set-Content -Path 'release/START HERE.txt' -Encoding UTF8
+          if (!(Test-Path 'release/App - Install Anywhere/Croupier.exe')) { throw 'Packaged Croupier.exe missing' }
+          if (!(Test-Path 'release/Mod - Install to Game/Croupier.dll')) { throw 'Packaged Croupier.dll missing' }
           Compress-Archive -Path 'release/*' -DestinationPath Croupier-exact-rebuilt.zip -CompressionLevel Optimal
           Get-FileHash Croupier-exact-rebuilt.zip -Algorithm SHA256
 
