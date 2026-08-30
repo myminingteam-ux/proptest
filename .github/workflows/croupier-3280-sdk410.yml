@@ -73,6 +73,12 @@ jobs:
               + f'target_include_directories(Croupier PRIVATE "{shim_path}")',
               "Croupier compile-options marker",
           )
+          cm = replace_once(
+              cm,
+              "\n\timplot\n)",
+              "\n)",
+              "obsolete ImPlot link entry",
+          )
           cmake.write_text(cm, encoding="utf-8", newline="\n")
 
           utils_path = Path("src/mod/src/ZHMUtils.h")
