@@ -69,11 +69,20 @@ jobs:
               marker,
               marker
               + "\n"
-              + "target_compile_definitions(Croupier PRIVATE NOMINMAX)\n"
               + f'target_include_directories(Croupier PRIVATE "{shim_path}")',
               "Croupier compile-options marker",
           )
           cmake.write_text(cm, encoding="utf-8", newline="\n")
+
+          utils_path = Path("src/mod/src/ZHMUtils.h")
+          utils = utils_path.read_text(encoding="utf-8")
+          utils = replace_once(
+              utils,
+              "s_PropertyInfo->m_PropetyGetter(",
+              "s_PropertyInfo->m_PropertyGetter(",
+              "SDK 4.1.0 property-getter rename",
+          )
+          utils_path.write_text(utils, encoding="utf-8", newline="\n")
 
           if os.environ["BUILD_VARIANT"] == "load-hook-disabled":
               cpp_path = Path("src/mod/src/Croupier.cpp")
@@ -168,8 +177,11 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release `
             -DCMAKE_POLICY_DEFAULT_CMP0091=NEW `
             -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded
+          if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed' }
           cmake --build build --parallel
+          if ($LASTEXITCODE -ne 0) { throw 'Native Croupier build failed' }
           cmake --install build --prefix stage
+          if ($LASTEXITCODE -ne 0) { throw 'Native Croupier install failed' }
           if (-not (Test-Path -LiteralPath 'stage/bin/Croupier.dll')) {
             throw 'Native Croupier.dll was not installed'
           }
