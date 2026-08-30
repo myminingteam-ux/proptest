@@ -35,7 +35,12 @@ jobs:
           $path = 'src/mod/CMakeLists.txt'
           $text = Get-Content $path -Raw
           $text = $text.Replace('set(ZHMMODSDK_VER "v4.0.0-rc.2")', 'set(ZHMMODSDK_VER "v4.1.0")')
-          $text = $text.Replace('target_compile_options(Croupier PRIVATE -utf-8)', "target_compile_options(Croupier PRIVATE -utf-8)`ntarget_compile_definitions(Croupier PRIVATE NOMINMAX)`ntarget_include_directories(Croupier PRIVATE \"$ENV{VCPKG_PREFIX}/include\")")
+          $replacement = @'
+          target_compile_options(Croupier PRIVATE -utf-8)
+          target_compile_definitions(Croupier PRIVATE NOMINMAX)
+          target_include_directories(Croupier PRIVATE "$ENV{VCPKG_PREFIX}/include")
+          '@
+          $text = $text.Replace('target_compile_options(Croupier PRIVATE -utf-8)', $replacement.Trim())
           if ($text -notmatch 'ZHMMODSDK_VER "v4.1.0"') { throw 'SDK version patch failed' }
           if ($text -notmatch 'NOMINMAX') { throw 'NOMINMAX patch failed' }
           if ($text -notmatch 'VCPKG_PREFIX') { throw 'vcpkg include patch failed' }
