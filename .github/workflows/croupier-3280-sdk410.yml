@@ -35,7 +35,9 @@ jobs:
           $path = 'src/mod/CMakeLists.txt'
           $text = Get-Content $path -Raw
           $text = $text.Replace('set(ZHMMODSDK_VER "v4.0.0-rc.2")', 'set(ZHMMODSDK_VER "v4.1.0")')
+          $text = $text.Replace('target_compile_options(Croupier PRIVATE -utf-8)', "target_compile_options(Croupier PRIVATE -utf-8)`ntarget_compile_definitions(Croupier PRIVATE NOMINMAX)")
           if ($text -notmatch 'ZHMMODSDK_VER "v4.1.0"') { throw 'SDK version patch failed' }
+          if ($text -notmatch 'NOMINMAX') { throw 'NOMINMAX patch failed' }
           Set-Content $path $text -Encoding UTF8
 
       - name: Apply friend loading-hook workaround consistently
@@ -103,12 +105,29 @@ jobs:
         with:
           arch: x64
 
+      - name: Install SDK 4.1.0 ImPlot dependency
+        shell: pwsh
+        run: |
+          $vcpkgExe = (Get-Command vcpkg.exe -ErrorAction Stop).Source
+          $vcpkgRoot = Split-Path $vcpkgExe -Parent
+          & $vcpkgExe install implot:x64-windows-static
+          if ($LASTEXITCODE -ne 0) { throw 'vcpkg ImPlot install failed' }
+          $prefix = Join-Path $vcpkgRoot 'installed/x64-windows-static'
+          if (!(Test-Path (Join-Path $prefix 'include/implot.h'))) { throw 'implot.h missing after vcpkg install' }
+          if (!(Test-Path (Join-Path $prefix 'lib/implot.lib'))) { throw 'implot.lib missing after vcpkg install' }
+          "VCPKG_PREFIX=$prefix" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Build HITMAN mod against ZHMModSDK v4.1.0
         shell: pwsh
         run: |
+          $implotInclude = Join-Path $env:VCPKG_PREFIX 'include'
+          $implotRelease = Join-Path $env:VCPKG_PREFIX 'lib/implot.lib'
+          $implotDebug = Join-Path $env:VCPKG_PREFIX 'debug/lib/implot.lib'
           Push-Location src/mod
-          cmake --preset x64-Release
+          cmake --preset x64-Release -DCMAKE_PREFIX_PATH="$env:VCPKG_PREFIX" -DIMPLOT_INCLUDE_DIR="$implotInclude" -DIMPLOT_LIBRARY="$implotRelease" -DIMPLOT_DEBUG_LIBRARY="$implotDebug"
+          if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed' }
           cmake --build _build/x64-Release --config RelWithDebInfo --parallel
+          if ($LASTEXITCODE -ne 0) { throw 'Croupier native build failed' }
           Pop-Location
           $dll = Get-ChildItem src/mod/_build/x64-Release -Filter Croupier.dll -Recurse | Select-Object -First 1
           if (!$dll) { throw 'Croupier.dll was not produced' }
