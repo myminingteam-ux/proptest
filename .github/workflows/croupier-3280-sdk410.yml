@@ -29,6 +29,17 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Create SDK 4.1.0 ImPlot ABI shim
+        shell: pwsh
+        run: |
+          $shim = Join-Path $env:GITHUB_WORKSPACE 'compat-include'
+          New-Item -ItemType Directory -Force $shim | Out-Null
+          @'
+          #pragma once
+          struct ImPlotContext;
+          '@ | Set-Content (Join-Path $shim 'implot.h') -Encoding ascii
+          "IMPLOT_SHIM_DIR=$shim" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Upgrade mod to official ZHMModSDK v4.1.0
         shell: pwsh
         run: |
@@ -38,12 +49,12 @@ jobs:
           $replacement = @'
           target_compile_options(Croupier PRIVATE -utf-8)
           target_compile_definitions(Croupier PRIVATE NOMINMAX)
-          target_include_directories(Croupier PRIVATE "$ENV{VCPKG_PREFIX}/include")
+          target_include_directories(Croupier PRIVATE "$ENV{IMPLOT_SHIM_DIR}")
           '@
           $text = $text.Replace('target_compile_options(Croupier PRIVATE -utf-8)', $replacement.Trim())
           if ($text -notmatch 'ZHMMODSDK_VER "v4.1.0"') { throw 'SDK version patch failed' }
           if ($text -notmatch 'NOMINMAX') { throw 'NOMINMAX patch failed' }
-          if ($text -notmatch 'VCPKG_PREFIX') { throw 'vcpkg include patch failed' }
+          if ($text -notmatch 'IMPLOT_SHIM_DIR') { throw 'ImPlot shim include patch failed' }
           Set-Content $path $text -Encoding UTF8
 
       - name: Apply friend loading-hook workaround consistently
@@ -111,18 +122,6 @@ jobs:
         with:
           arch: x64
 
-      - name: Install SDK 4.1.0 ImPlot dependency
-        shell: pwsh
-        run: |
-          $vcpkgExe = (Get-Command vcpkg.exe -ErrorAction Stop).Source
-          $vcpkgRoot = Split-Path $vcpkgExe -Parent
-          & $vcpkgExe install implot:x64-windows-static
-          if ($LASTEXITCODE -ne 0) { throw 'vcpkg ImPlot install failed' }
-          $prefix = Join-Path $vcpkgRoot 'installed/x64-windows-static'
-          if (!(Test-Path (Join-Path $prefix 'include/implot.h'))) { throw 'implot.h missing after vcpkg install' }
-          if (!(Test-Path (Join-Path $prefix 'lib/implot.lib'))) { throw 'implot.lib missing after vcpkg install' }
-          "VCPKG_PREFIX=$prefix" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
       - name: Build HITMAN mod against ZHMModSDK v4.1.0
         shell: pwsh
         run: |
@@ -158,13 +157,21 @@ jobs:
           Copy-Item 'compatibility-diff-${{ matrix.variant }}.patch' release/COMPATIBILITY-SOURCE-DIFF.patch -Force
 
           @'
+          ZHMModSDK v4.1.0 DevPkg includes IModSDK.h which references ImPlotContext,
+          but its development package does not expose implot.h to this legacy consumer.
+          Croupier does not use ImPlot. The build therefore supplies only the forward
+          declaration `struct ImPlotContext;` required to compile the SDK interface.
+          No ImPlot runtime calls or behavior are added or replaced.
+          '@ | Set-Content release/'IMPLOT-COMPATIBILITY-NOTE.txt' -Encoding UTF8
+
+          @'
           CROUPIER - HITMAN 3.280 COMPATIBILITY BUILD
 
           Base Croupier source:
           908ae6bf4ca209661359cd559d1f3be8e49d4c28
 
           SDK:
-          ZHMModSDK v4.1.0 (official HITMAN 3 3.280.0.0 support)
+          ZHMModSDK v4.1.0 (HITMAN 3 3.280 compatibility target)
 
           Variant:
           ${{ matrix.variant }}
