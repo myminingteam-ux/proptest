@@ -37,6 +37,9 @@ jobs:
           @'
           #pragma once
           struct ImPlotContext;
+          namespace ImPlot {
+              inline void SetCurrentContext(ImPlotContext*) noexcept {}
+          }
           '@ | Set-Content (Join-Path $shim 'implot.h') -Encoding ascii
           "IMPLOT_SHIM_DIR=$shim" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
@@ -56,6 +59,32 @@ jobs:
           if ($text -notmatch 'NOMINMAX') { throw 'NOMINMAX patch failed' }
           if ($text -notmatch 'IMPLOT_SHIM_DIR') { throw 'ImPlot shim include patch failed' }
           Set-Content $path $text -Encoding UTF8
+
+      - name: Port legacy Croupier API calls to SDK 4.1.0
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+
+          p = Path('src/mod/src/Croupier.cpp')
+          text = p.read_text(encoding='utf-8')
+          replacements = {
+              'Globals::ActorManager->m_aActiveActors[i]': 'Globals::ActorManager->m_aActors[i]',
+              'actorRef.m_ref.QueryInterface<ZRepositoryItemEntity>()': 'actorRef.m_entityRef.QueryInterface<ZRepositoryItemEntity>()',
+              'actor.m_bUnk16': 'actor.m_bContractTarget',
+              'Functions::ZDynamicObject_ToString->Call(const_cast<ZDynamicObject*>(&obj), &res);': 'Functions::ZDynamicObject_ToString->Call(const_cast<ZDynamicObject*>(&obj), res);',
+          }
+          for old, new in replacements.items():
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'Expected exactly one SDK compatibility occurrence for {old!r}, found {count}')
+              text = text.replace(old, new)
+          p.write_text(text, encoding='utf-8', newline='\n')
+          '@ | python -
+
+          if (Select-String -Path src/mod/src/Croupier.cpp -Pattern 'm_aActiveActors|m_bUnk16|ZDynamicObject_ToString->Call\(const_cast<ZDynamicObject\*>\(&obj\), &res\)' -Quiet) {
+            throw 'Legacy SDK symbols remain after SDK 4.1.0 port'
+          }
 
       - name: Apply friend loading-hook workaround consistently
         if: matrix.variant == 'load-hook-disabled'
@@ -157,11 +186,11 @@ jobs:
           Copy-Item 'compatibility-diff-${{ matrix.variant }}.patch' release/COMPATIBILITY-SOURCE-DIFF.patch -Force
 
           @'
-          ZHMModSDK v4.1.0 DevPkg includes IModSDK.h which references ImPlotContext,
-          but its development package does not expose implot.h to this legacy consumer.
-          Croupier does not use ImPlot. The build therefore supplies only the forward
-          declaration `struct ImPlotContext;` required to compile the SDK interface.
-          No ImPlot runtime calls or behavior are added or replaced.
+          ZHMModSDK v4.1.0 DevPkg exposes IModSDK/IPluginInterface headers that reference
+          ImPlotContext and ImPlot::SetCurrentContext, but this legacy Croupier does not use
+          ImPlot itself. The compatibility build supplies only the declarations and no-op
+          context setter required by those SDK headers. No Croupier ImPlot behavior exists
+          to replace, and no ImPlot runtime calls are introduced.
           '@ | Set-Content release/'IMPLOT-COMPATIBILITY-NOTE.txt' -Encoding UTF8
 
           @'
