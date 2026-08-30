@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     timeout-minutes: 45
     steps:
       - name: Checkout exact Croupier source
@@ -59,13 +59,15 @@ jobs:
       - name: Assemble ready-to-use package
         shell: pwsh
         run: |
-          $base = Get-ChildItem official -Directory | Select-Object -First 1
-          if ($base -and (Test-Path (Join-Path $base.FullName 'App - Install Anywhere'))) {
-            Copy-Item (Join-Path $base.FullName '*') release -Recurse -Force
-          } elseif (Test-Path 'official/App - Install Anywhere') {
+          if (Test-Path 'official/App - Install Anywhere') {
             Copy-Item 'official/*' release -Recurse -Force
           } else {
-            throw 'Could not locate official release package structure'
+            $base = Get-ChildItem official -Directory | Select-Object -First 1
+            if ($base -and (Test-Path (Join-Path $base.FullName 'App - Install Anywhere'))) {
+              Copy-Item (Join-Path $base.FullName '*') release -Recurse -Force
+            } else {
+              throw 'Could not locate official release package structure'
+            }
           }
           Copy-Item 'built-app/*' 'release/App - Install Anywhere/' -Recurse -Force
           Copy-Item 'built-mod/Croupier.dll' 'release/Mod - Install to Game/Croupier.dll' -Force
