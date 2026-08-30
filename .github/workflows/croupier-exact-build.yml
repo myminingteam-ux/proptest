@@ -1,0 +1,95 @@
+name: Croupier Exact Build
+
+on:
+  push:
+    branches:
+      - croupier-exact-build
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact Croupier source
+        uses: actions/checkout@v4
+        with:
+          repository: Deji69/Croupier
+          ref: 908ae6bf4ca209661359cd559d1f3be8e49d4c28
+          path: src
+          fetch-depth: 1
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Download exact-tag official package as packaging baseline
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri 'https://github.com/Deji69/Croupier/releases/download/v3.0.2-beta/Croupier-v3.0.2.zip' -OutFile official.zip
+          $hash = (Get-FileHash official.zip -Algorithm SHA256).Hash.ToLower()
+          if ($hash -ne 'bf0771a6416fc18833b311a8039a7ddc1608102ffdd9e021a355f8e46671bd29') { throw "Official ZIP hash mismatch: $hash" }
+          Expand-Archive official.zip -DestinationPath official
+          Get-ChildItem official -Force
+
+      - name: Build desktop app from exact source
+        shell: pwsh
+        run: |
+          dotnet restore src/app/Croupier.csproj
+          dotnet publish src/app/Croupier.csproj -c Release -r win-x64 --self-contained false -p:EnableWindowsTargeting=true -o built-app
+          if (!(Test-Path built-app/Croupier.exe)) { throw 'Croupier.exe was not produced' }
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Build HITMAN mod from exact source
+        shell: pwsh
+        run: |
+          Push-Location src/mod
+          cmake --preset x64-Release
+          cmake --build _build/x64-Release --config RelWithDebInfo --parallel
+          Pop-Location
+          $dll = Get-ChildItem src/mod/_build/x64-Release -Filter Croupier.dll -Recurse | Select-Object -First 1
+          if (!$dll) { throw 'Croupier.dll was not produced' }
+          New-Item -ItemType Directory -Force built-mod | Out-Null
+          Copy-Item $dll.FullName built-mod/Croupier.dll
+
+      - name: Assemble ready-to-use package
+        shell: pwsh
+        run: |
+          $base = Get-ChildItem official -Directory | Select-Object -First 1
+          if ($base -and (Test-Path (Join-Path $base.FullName 'App - Install Anywhere'))) {
+            Copy-Item (Join-Path $base.FullName '*') release -Recurse -Force
+          } elseif (Test-Path 'official/App - Install Anywhere') {
+            Copy-Item 'official/*' release -Recurse -Force
+          } else {
+            throw 'Could not locate official release package structure'
+          }
+          Copy-Item 'built-app/*' 'release/App - Install Anywhere/' -Recurse -Force
+          Copy-Item 'built-mod/Croupier.dll' 'release/Mod - Install to Game/Croupier.dll' -Force
+          @'
+          CROUPIER EXACT REBUILD
+
+          Source commit: 908ae6bf4ca209661359cd559d1f3be8e49d4c28
+          Matching upstream tag: v3.0.2-beta
+
+          App:
+          Open "App - Install Anywhere" and run Croupier.exe.
+
+          Mod:
+          Copy Croupier.dll from "Mod - Install to Game" into HITMAN3\Retail\mods\.
+
+          The application and mod in this package were rebuilt on Windows from the exact source commit above.
+          '@ | Set-Content -Path release/'START HERE.txt' -Encoding UTF8
+          Compress-Archive -Path 'release/*' -DestinationPath Croupier-exact-rebuilt.zip -CompressionLevel Optimal
+          Get-FileHash Croupier-exact-rebuilt.zip -Algorithm SHA256
+
+      - name: Upload exact rebuilt package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Croupier-exact-rebuilt
+          path: Croupier-exact-rebuilt.zip
+          if-no-files-found: error
+          retention-days: 7
