@@ -2,8 +2,7 @@ name: Croupier HITMAN 3.280 SDK 4.1.0
 
 on:
   push:
-    branches:
-      - croupier-3280-sdk410
+    branches: [croupier-3280-sdk410]
   workflow_dispatch:
 
 jobs:
@@ -16,7 +15,7 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - name: Checkout exact Croupier base source
+      - name: Checkout exact legacy Croupier base
         uses: actions/checkout@v4
         with:
           repository: Deji69/Croupier
@@ -29,121 +28,118 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Create SDK 4.1.0 ImPlot ABI shim
+      - name: Apply SDK 4.1.0 compatibility patch
         shell: pwsh
-        run: |
-          $shim = Join-Path $env:GITHUB_WORKSPACE 'compat-include'
-          New-Item -ItemType Directory -Force $shim | Out-Null
-          @'
-          #pragma once
-          struct ImPlotContext;
-          namespace ImPlot {
-              inline void SetCurrentContext(ImPlotContext*) noexcept {}
-          }
-          '@ | Set-Content (Join-Path $shim 'implot.h') -Encoding ascii
-          "IMPLOT_SHIM_DIR=$shim" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-      - name: Upgrade mod to official ZHMModSDK v4.1.0
-        shell: pwsh
-        run: |
-          $path = 'src/mod/CMakeLists.txt'
-          $text = Get-Content $path -Raw
-          $text = $text.Replace('set(ZHMMODSDK_VER "v4.0.0-rc.2")', 'set(ZHMMODSDK_VER "v4.1.0")')
-          $replacement = @'
-          target_compile_options(Croupier PRIVATE -utf-8)
-          target_compile_definitions(Croupier PRIVATE NOMINMAX)
-          target_include_directories(Croupier PRIVATE "$ENV{IMPLOT_SHIM_DIR}")
-          '@
-          $text = $text.Replace('target_compile_options(Croupier PRIVATE -utf-8)', $replacement.Trim())
-          if ($text -notmatch 'ZHMMODSDK_VER "v4.1.0"') { throw 'SDK version patch failed' }
-          if ($text -notmatch 'NOMINMAX') { throw 'NOMINMAX patch failed' }
-          if ($text -notmatch 'IMPLOT_SHIM_DIR') { throw 'ImPlot shim include patch failed' }
-          Set-Content $path $text -Encoding UTF8
-
-      - name: Port legacy Croupier API calls to SDK 4.1.0
-        shell: pwsh
+        env:
+          BUILD_VARIANT: ${{ matrix.variant }}
         run: |
           @'
           from pathlib import Path
+          import os, re
 
-          p = Path('src/mod/src/Croupier.cpp')
-          text = p.read_text(encoding='utf-8')
-          replacements = {
-              'Globals::ActorManager->m_aActiveActors[i]': 'Globals::ActorManager->m_aActors[i]',
-              'actorRef.m_ref.QueryInterface<ZRepositoryItemEntity>()': 'actorRef.m_entityRef.QueryInterface<ZRepositoryItemEntity>()',
-              'actor.m_bUnk16': 'actor.m_bContractTarget',
-              'Functions::ZDynamicObject_ToString->Call(const_cast<ZDynamicObject*>(&obj), &res);': 'Functions::ZDynamicObject_ToString->Call(const_cast<ZDynamicObject*>(&obj), res);',
-          }
-          for old, new in replacements.items():
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f'Expected exactly one SDK compatibility occurrence for {old!r}, found {count}')
-              text = text.replace(old, new)
-          p.write_text(text, encoding='utf-8', newline='\n')
-          '@ | python -
+          root = Path.cwd()
+          shim = root / 'compat-include'
+          shim.mkdir(exist_ok=True)
+          (shim / 'implot.h').write_text(
+              '#pragma once\n'
+              'struct ImPlotContext;\n'
+              'namespace ImPlot { inline void SetCurrentContext(ImPlotContext*) noexcept {} }\n',
+              encoding='ascii'
+          )
 
-          if (Select-String -Path src/mod/src/Croupier.cpp -Pattern 'm_aActiveActors|m_bUnk16|ZDynamicObject_ToString->Call\(const_cast<ZDynamicObject\*>\(&obj\), &res\)' -Quiet) {
-            throw 'Legacy SDK symbols remain after SDK 4.1.0 port'
-          }
-
-      - name: Apply friend loading-hook workaround consistently
-        if: matrix.variant == 'load-hook-disabled'
-        shell: pwsh
-        run: |
-          @'
-          from pathlib import Path
-          import re
-
-          h = Path('src/mod/src/Croupier.h')
-          text = h.read_text(encoding='utf-8')
-          for exact in [
-              '\tauto SendLoadStarted() -> void;\n',
-              '\tauto SendLoadFinished() -> void;\n',
-              '\tauto ProcessLoadRemoval() -> void;\n',
-              '\tDECLARE_PLUGIN_DETOUR(Croupier, void*, OnLoadingScreenActivated, void* th, void* a1);\n',
-              '\tbool loadRemovalActive = false;\n',
-              '\tbool isLoadingScreenCheckHasBeenTrue = false;\n',
-              '\tbool loadingScreenActivated = false;\n',
-          ]:
-              text = text.replace(exact, '')
-          h.write_text(text, encoding='utf-8', newline='\n')
+          cmake = Path('src/mod/CMakeLists.txt')
+          cm = cmake.read_text(encoding='utf-8-sig')
+          old_sdk = 'set(ZHMMODSDK_VER "v4.0.0-rc.2")'
+          if cm.count(old_sdk) != 1:
+              raise SystemExit('Unexpected legacy SDK declaration')
+          cm = cm.replace(old_sdk, 'set(ZHMMODSDK_VER "v4.1.0")')
+          marker = 'target_compile_options(Croupier PRIVATE -utf-8)'
+          if cm.count(marker) != 1:
+              raise SystemExit('Unexpected Croupier compile-options marker')
+          shim_path = shim.resolve().as_posix()
+          cm = cm.replace(marker,
+              marker + '\n'
+              'target_compile_definitions(Croupier PRIVATE NOMINMAX)\n'
+              f'target_include_directories(Croupier PRIVATE "{shim_path}")')
+          cmake.write_text(cm, encoding='utf-8', newline='\n')
 
           cpp = Path('src/mod/src/Croupier.cpp')
           text = cpp.read_text(encoding='utf-8')
-          text = text.replace('\tHooks::ZLoadingScreenVideo_ActivateLoadingScreen->AddDetour(this, &Croupier::OnLoadingScreenActivated);\n', '')
-          text = text.replace('\tHooks::ZLoadingScreenVideo_ActivateLoadingScreen->RemoveDetour(&Croupier::OnLoadingScreenActivated);\n', '')
-          text = text.replace('\tthis->ProcessLoadRemoval();\n', '')
+          replacements = [
+              ('Globals::ActorManager->m_aActiveActors[i]', 'Globals::ActorManager->m_aActors[i]'),
+              ('actorRef.m_ref.QueryInterface<ZRepositoryItemEntity>()', 'actorRef.m_entityRef.QueryInterface<ZRepositoryItemEntity>()'),
+              ('if (!actor.m_bUnk16) continue; // m_bUnk16 = is target (and still alive)',
+               'if (!actor.m_bContractTarget) continue; // SDK 4.1.0 target flag'),
+              ('Functions::ZDynamicObject_ToString->Call(const_cast<ZDynamicObject*>(&obj), &res);',
+               'Functions::ZDynamicObject_ToString->Call(const_cast<ZDynamicObject*>(&obj), res);'),
+          ]
+          for old, new in replacements:
+              if text.count(old) != 1:
+                  raise SystemExit(f'Expected one compatibility site, found {text.count(old)}: {old}')
+              text = text.replace(old, new)
 
-          text, n1 = re.subn(
-              r'auto Croupier::ProcessLoadRemoval\(\) -> void \{.*?\n\}\n\nauto Croupier::ProcessMissionsMessage',
-              'auto Croupier::ProcessMissionsMessage', text, count=1, flags=re.S)
-          text, n2 = re.subn(
-              r'auto Croupier::SendLoadStarted\(\) -> void \{.*?\n\}\n\nauto Croupier::SendLoadFinished\(\) -> void \{.*?\n\}\n\n',
-              '', text, count=1, flags=re.S)
-          text, n3 = re.subn(
-              r'DEFINE_PLUGIN_DETOUR\(Croupier, void\*, OnLoadingScreenActivated, void\* th, void\* a1\) \{.*?\n\}\n\nDEFINE_PLUGIN_DETOUR\(Croupier, void, OnEventReceived',
-              'DEFINE_PLUGIN_DETOUR(Croupier, void, OnEventReceived', text, count=1, flags=re.S)
-          if (n1, n2, n3) != (1, 1, 1):
-              raise SystemExit(f'workaround patch incomplete: ProcessLoadRemoval={n1}, SendLoad={n2}, detour={n3}')
+          if os.environ['BUILD_VARIANT'] == 'load-hook-disabled':
+              h = Path('src/mod/src/Croupier.h')
+              header = h.read_text(encoding='utf-8')
+              for exact in [
+                  '\tauto SendLoadStarted() -> void;\n',
+                  '\tauto SendLoadFinished() -> void;\n',
+                  '\tauto ProcessLoadRemoval() -> void;\n',
+                  '\tDECLARE_PLUGIN_DETOUR(Croupier, void*, OnLoadingScreenActivated, void* th, void* a1);\n',
+                  '\tbool loadRemovalActive = false;\n',
+                  '\tbool isLoadingScreenCheckHasBeenTrue = false;\n',
+                  '\tbool loadingScreenActivated = false;\n',
+              ]:
+                  if header.count(exact) != 1:
+                      raise SystemExit(f'Expected one loading-hook header site: {exact!r}')
+                  header = header.replace(exact, '')
+              h.write_text(header, encoding='utf-8', newline='\n')
+
+              text = text.replace('\tHooks::ZLoadingScreenVideo_ActivateLoadingScreen->AddDetour(this, &Croupier::OnLoadingScreenActivated);\n', '')
+              text = text.replace('\tHooks::ZLoadingScreenVideo_ActivateLoadingScreen->RemoveDetour(&Croupier::OnLoadingScreenActivated);\n', '')
+              text = text.replace('\tthis->ProcessLoadRemoval();\n', '')
+              text, n1 = re.subn(
+                  r'auto Croupier::ProcessLoadRemoval\(\) -> void \{.*?\n\}\n\nauto Croupier::ProcessMissionsMessage',
+                  'auto Croupier::ProcessMissionsMessage', text, count=1, flags=re.S)
+              text, n2 = re.subn(
+                  r'auto Croupier::SendLoadStarted\(\) -> void \{.*?\n\}\n\nauto Croupier::SendLoadFinished\(\) -> void \{.*?\n\}\n\n',
+                  '', text, count=1, flags=re.S)
+              text, n3 = re.subn(
+                  r'DEFINE_PLUGIN_DETOUR\(Croupier, void\*, OnLoadingScreenActivated, void\* th, void\* a1\) \{.*?\n\}\n\nDEFINE_PLUGIN_DETOUR\(Croupier, void, OnEventReceived',
+                  'DEFINE_PLUGIN_DETOUR(Croupier, void, OnEventReceived', text, count=1, flags=re.S)
+              if (n1, n2, n3) != (1, 1, 1):
+                  raise SystemExit(f'Loading workaround incomplete: {(n1, n2, n3)}')
+
           cpp.write_text(text, encoding='utf-8', newline='\n')
+
+          final = cpp.read_text(encoding='utf-8')
+          forbidden = [
+              'Globals::ActorManager->m_aActiveActors[i]',
+              'actorRef.m_ref.QueryInterface<ZRepositoryItemEntity>()',
+              'if (!actor.m_bUnk16)',
+              'ZDynamicObject_ToString->Call(const_cast<ZDynamicObject*>(&obj), &res)',
+          ]
+          for s in forbidden:
+              if s in final:
+                  raise SystemExit(f'Legacy compiled expression remains: {s}')
+
+          if os.environ['BUILD_VARIANT'] == 'load-hook-disabled':
+              for s in ['OnLoadingScreenActivated', 'ProcessLoadRemoval', 'SendLoadStarted', 'SendLoadFinished']:
+                  if s in final or s in Path('src/mod/src/Croupier.h').read_text(encoding='utf-8'):
+                      raise SystemExit(f'Loading workaround symbol remains: {s}')
           '@ | python -
 
-          if (Select-String -Path src/mod/src/Croupier.h,src/mod/src/Croupier.cpp -Pattern 'OnLoadingScreenActivated|ProcessLoadRemoval|SendLoadStarted|SendLoadFinished|loadRemovalActive|loadingScreenActivated' -Quiet) {
-            throw 'Loading-hook symbols remain after workaround patch'
-          }
-
-      - name: Record compatibility source diff
+      - name: Record exact source diff
         shell: pwsh
         run: |
           Push-Location src
-          git diff -- mod/CMakeLists.txt mod/src/Croupier.h mod/src/Croupier.cpp | Out-File ../compatibility-diff-${{ matrix.variant }}.patch -Encoding utf8
+          git diff -- mod/CMakeLists.txt mod/src/Croupier.h mod/src/Croupier.cpp | Out-File ../COMPATIBILITY-SOURCE-DIFF.patch -Encoding utf8
           Pop-Location
 
-      - name: Build desktop app from exact source
+      - name: Build self-contained Windows app
         shell: pwsh
         run: |
-          dotnet restore src/app/Croupier.csproj
-          dotnet publish src/app/Croupier.csproj -c Release -r win-x64 --self-contained false -p:EnableWindowsTargeting=true -o built-app
+          dotnet publish src/app/Croupier.csproj -c Release -r win-x64 --self-contained true -p:EnableWindowsTargeting=true -p:PublishTrimmed=false -o built-app
           if (!(Test-Path built-app/Croupier.exe)) { throw 'Croupier.exe was not produced' }
 
       - name: Setup MSVC 2022 x64
@@ -151,7 +147,7 @@ jobs:
         with:
           arch: x64
 
-      - name: Build HITMAN mod against ZHMModSDK v4.1.0
+      - name: Build native HITMAN mod
         shell: pwsh
         run: |
           Push-Location src/mod
@@ -165,73 +161,64 @@ jobs:
           New-Item -ItemType Directory -Force built-mod | Out-Null
           Copy-Item $dll.FullName built-mod/Croupier.dll
 
-      - name: Download old matching release only for package support files
+      - name: Assemble friend-ready ZIP
         shell: pwsh
         run: |
-          Invoke-WebRequest -Uri 'https://github.com/Deji69/Croupier/releases/download/v3.0.2-beta/Croupier-v3.0.2.zip' -OutFile official.zip
-          $hash = (Get-FileHash official.zip -Algorithm SHA256).Hash.ToLower()
-          if ($hash -ne 'bf0771a6416fc18833b311a8039a7ddc1608102ffdd9e021a355f8e46671bd29') { throw "Official ZIP hash mismatch: $hash" }
-          Expand-Archive official.zip -DestinationPath official
-
-      - name: Assemble easy-to-run package
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force release | Out-Null
-          Copy-Item 'official/App - Install Anywhere' release -Recurse -Force
-          Copy-Item 'official/Mod - Install to Game' release -Recurse -Force
-          if (Test-Path 'official/README.txt') { Copy-Item 'official/README.txt' release/README-original.txt -Force }
-
-          Copy-Item 'built-app/*' 'release/App - Install Anywhere/' -Recurse -Force
-          Copy-Item 'built-mod/Croupier.dll' 'release/Mod - Install to Game/Croupier.dll' -Force
-          Copy-Item 'compatibility-diff-${{ matrix.variant }}.patch' release/COMPATIBILITY-SOURCE-DIFF.patch -Force
+          $release = 'release'
+          $appDir = Join-Path $release 'App - Install Anywhere'
+          $modDir = Join-Path $release 'Mod - Install to Game'
+          New-Item -ItemType Directory -Force $appDir,$modDir | Out-Null
+          Copy-Item 'built-app/*' $appDir -Recurse -Force
+          Copy-Item 'built-mod/Croupier.dll' $modDir -Force
+          Copy-Item 'COMPATIBILITY-SOURCE-DIFF.patch' $release -Force
 
           @'
-          ZHMModSDK v4.1.0 DevPkg exposes IModSDK/IPluginInterface headers that reference
-          ImPlotContext and ImPlot::SetCurrentContext, but this legacy Croupier does not use
-          ImPlot itself. The compatibility build supplies only the declarations and no-op
-          context setter required by those SDK headers. No Croupier ImPlot behavior exists
-          to replace, and no ImPlot runtime calls are introduced.
-          '@ | Set-Content release/'IMPLOT-COMPATIBILITY-NOTE.txt' -Encoding UTF8
+          [InternetShortcut]
+          URL=https://github.com/OrfeasZ/ZHMModSDK/releases/tag/v4.1.0
+          '@ | Set-Content (Join-Path $release 'ZHMModSDK-v4.1.0.url') -Encoding ascii
 
           @'
-          CROUPIER - HITMAN 3.280 COMPATIBILITY BUILD
-
-          Base Croupier source:
-          908ae6bf4ca209661359cd559d1f3be8e49d4c28
-
-          SDK:
-          ZHMModSDK v4.1.0 (HITMAN 3 3.280 compatibility target)
-
-          Variant:
-          ${{ matrix.variant }}
+          CROUPIER - HITMAN 3.280 / ZHMMODSDK 4.1.0
 
           INSTALL
-          1. Keep "App - Install Anywhere" outside the HITMAN directory.
-          2. Run Croupier.exe from that folder.
-          3. Install ZHMModSDK v4.1.0 in HITMAN if it is not already installed.
-          4. Copy Croupier.dll from "Mod - Install to Game" to HITMAN3\Retail\mods\.
-          5. Run Croupier and HITMAN at the same privilege level.
+          1. Extract this ZIP somewhere outside the HITMAN folder.
+          2. Install ZHMModSDK v4.1.0 if you do not already have it.
+          3. Copy "Mod - Install to Game\Croupier.dll" to HITMAN3\Retail\mods\.
+          4. Run "App - Install Anywhere\Croupier.exe".
+          5. Start HITMAN.
+          6. Run Croupier and HITMAN at the same privilege level (normally both non-admin).
 
-          VARIANTS
-          standard:
-          Old Croupier behavior retained, compiled against ZHMModSDK v4.1.0.
+          This app build is self-contained for Windows x64, so no .NET SDK or Visual Studio is required.
 
-          load-hook-disabled:
-          Same build, but the old ZLoadingScreenVideo loading-screen detour and associated
-          load-removal state handling are consistently disabled. This preserves the apparent
-          intent of the modified Croupier.h supplied after the HITMAN 3.280 update while fixing
-          the incomplete source edit that previously prevented compilation.
+          BUILD VARIANT: ${{ matrix.variant }}
+          BASE SOURCE: 908ae6bf4ca209661359cd559d1f3be8e49d4c28
+          SDK TARGET: ZHMModSDK v4.1.0
 
-          Runtime compatibility still requires an actual HITMAN 3.280 game test.
-          '@ | Set-Content release/'START HERE.txt' -Encoding UTF8
+          standard = legacy Croupier loading behavior retained.
+          load-hook-disabled = old loading-screen detour/load-removal path consistently disabled,
+          matching the apparent intent of the supplied post-3.280 source edit.
+
+          Windows compilation is verified by CI. Actual in-game HITMAN 3.280 behavior still needs
+          to be tested on a machine with the game installed.
+          '@ | Set-Content (Join-Path $release 'START HERE.txt') -Encoding utf8
+
+          @'
+          The ZHMModSDK v4.1.0 DevPkg public plugin headers reference ImPlot context setup, while
+          this legacy Croupier does not use ImPlot. The compatibility build provides the minimal
+          compile-time context declarations/no-op setter needed by those headers. No Croupier
+          ImPlot functionality is removed because this source version contains none.
+          '@ | Set-Content (Join-Path $release 'SDK-COMPATIBILITY-NOTE.txt') -Encoding utf8
 
           $zip = 'Croupier-3.280-SDK4.1.0-${{ matrix.variant }}.zip'
-          Compress-Archive -Path 'release/*' -DestinationPath $zip -CompressionLevel Optimal
-          Get-FileHash $zip -Algorithm SHA256
-          Get-FileHash 'release/App - Install Anywhere/Croupier.exe' -Algorithm SHA256
-          Get-FileHash 'release/Mod - Install to Game/Croupier.dll' -Algorithm SHA256
+          Compress-Archive -Path "$release/*" -DestinationPath $zip -CompressionLevel Optimal
+          $zipHash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          $exeHash = (Get-FileHash (Join-Path $appDir 'Croupier.exe') -Algorithm SHA256).Hash.ToLower()
+          $dllHash = (Get-FileHash (Join-Path $modDir 'Croupier.dll') -Algorithm SHA256).Hash.ToLower()
+          "ZIP_SHA256=$zipHash"
+          "EXE_SHA256=$exeHash"
+          "DLL_SHA256=$dllHash"
 
-      - name: Upload compatibility package
+      - name: Upload friend-ready package
         uses: actions/upload-artifact@v4
         with:
           name: Croupier-3.280-SDK4.1.0-${{ matrix.variant }}
