@@ -69,6 +69,7 @@ jobs:
               marker,
               marker
               + "\n"
+              + "target_compile_definitions(Croupier PRIVATE NOMINMAX)\n"
               + f'target_include_directories(Croupier PRIVATE "{shim_path}")',
               "Croupier compile-options marker",
           )
