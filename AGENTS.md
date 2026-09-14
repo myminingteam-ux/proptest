@@ -18,4 +18,4 @@ If a required file is missing or inaccessible, repository identity differs, or a
 
 Do not perform consequential state-changing work until the mismatch is reconciled. Read-only diagnosis is allowed. Chat history and memory are not substitutes for persisted state.
 
-GARY STABLE is v2.6.5 + ER1.1 + ER1.2. NEXT and LAB are non-canonical; use only STABLE/NEXT/LAB/ARCHIVED-REJECTED status names. Existing higher-level GARY governance and promotion evidence remain authoritative.
+GARY STABLE is v2.7.6 P0-1 Canonical Memory-State Contract, with runtime compatibility release 2.7.3 and protocol ABI 2.6.5. Its scope is the exact qualified read-only memory-state/retrieval contract; no new storage, persistence, provider, graph, vector, authority, agent, skill, dependency, or routing surface is active; SBK1 remains non-canonical in its NEXT/LAB-origin lane and the Experience Compiler remains LAB; P0-2 has not started. NEXT and LAB are non-canonical; use only STABLE/NEXT/LAB/ARCHIVED-REJECTED status names. Existing higher-level GARY governance and promotion evidence remain authoritative.
