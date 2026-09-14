@@ -45,9 +45,9 @@ export function header(activePath='') {
     <div class="wrap nav">
       <a class="brand" href="/" aria-label="Your Funded Account home"><img src="${logoSrc}" alt="Your Funded Account"></a>
       <nav class="desktop-nav" aria-label="Primary">${links}</nav>
-      <div class="nav-actions"><a class="login" href="${externalFlows.signin}">Log in</a><a class="btn btn-primary" href="${externalFlows.signup}">Get started</a><button class="menu-toggle" aria-label="Open menu" aria-expanded="false">${icon('menu')}</button></div>
+      <div class="nav-actions"><a class="login" href="${externalFlows.signin}">Log in</a><a class="btn btn-primary" href="${externalFlows.signup}">Get started</a><button class="menu-toggle" aria-label="Open menu" aria-controls="mobile-primary-nav" aria-expanded="false">${icon('menu')}</button></div>
     </div>
-    <nav class="mobile-nav" aria-label="Mobile primary">${links}<a href="${externalFlows.signin}">Log in</a><a class="btn btn-primary" href="${externalFlows.signup}">Get started</a></nav>
+    <nav id="mobile-primary-nav" class="mobile-nav" aria-label="Mobile primary">${links}<a href="${externalFlows.signin}">Log in</a><a class="btn btn-primary" href="${externalFlows.signup}">Get started</a></nav>
   </header>`;
 }
 
@@ -102,8 +102,8 @@ export function layout({ seo, path='/', body, schemas=[] }) {
     <link rel="canonical" href="${seo.canonical}"><link rel="icon" href="/assets/yfa-mark.png">
     <meta property="og:type" content="website"><meta property="og:site_name" content="${escapeHtml(seo.siteName)}"><meta property="og:title" content="${escapeHtml(seo.title)}"><meta property="og:description" content="${escapeHtml(seo.description)}"><meta property="og:url" content="${seo.canonical}"><meta property="og:image" content="${seo.image}">
     <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="${escapeHtml(seo.title)}"><meta name="twitter:description" content="${escapeHtml(seo.description)}"><meta name="twitter:image" content="${seo.image}">
-    <link rel="stylesheet" href="/assets/styles.css"><link rel="stylesheet" href="/assets/premium.css?v=20260822-black6"><link rel="stylesheet" href="/assets/chrome.css?v=20260822-3"><link rel="stylesheet" href="/assets/mobile-gary.css?v=20260822-1"><link rel="stylesheet" href="/assets/responsive-scale.css?v=20260822-1"><link rel="stylesheet" href="/assets/wide-desktop.css?v=20260822-1">${schemaHtml}
-  </head><body data-path="${path}">${header(path)}<main>${body}</main>${footer()}<script type="module" src="/assets/app.js"></script></body></html>`;
+    <link rel="stylesheet" href="/assets/styles.css"><link rel="stylesheet" href="/assets/redesign.css">${schemaHtml}
+  </head><body data-path="${path}">${header(path)}<main>${body}</main>${footer()}<div class="mobile-sticky-cta"><a class="btn btn-primary" href="${externalFlows.checkout}">View live options <span aria-hidden="true">→</span></a></div><script type="module" src="/assets/app.js"></script></body></html>`;
 }
 
 export function ctaBand(title='Ready to compare the programs?', text='Review the current rules before choosing an account.') {
